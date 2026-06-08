@@ -19,7 +19,7 @@
 
     <properties>
         <!-- Use a different version of rest-assured during tests to address incompatible versions of Groovy -->
-        <rest-assured.test.version>5.5.6</rest-assured.test.version>
+        <rest-assured.test.version>5.5.7</rest-assured.test.version>
     </properties>
 
     <dependencies>
