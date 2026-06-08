@@ -1,4 +1,4 @@
-image: maven:3.9.9-amazoncorretto-21-alpine
+image: maven:3.9.16-amazoncorretto-21-alpine
 
 pipelines:
   default:
