@@ -165,8 +165,11 @@ public class SchemaValidatorTest {
         final String value = "1" + Double.MAX_VALUE;
         final Schema schema = new NumberSchema().format("double");
 
+        // A value outside the double range cannot be represented as a JSON number that the
+        // validator accepts: networknt 3.x rejects it as a type error ("number expected") before
+        // the custom double-format validator is reached. The value is still rejected.
         assertFailWithoutContext(classUnderTest.validate(value, schema, "prefix"),
-                "validation.prefix.schema.format.double");
+                "validation.prefix.schema.type");
     }
 
     @Test

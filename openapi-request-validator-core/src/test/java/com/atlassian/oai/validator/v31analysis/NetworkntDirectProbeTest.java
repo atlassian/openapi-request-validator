@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.v31analysis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.InputFormat;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.dialect.Dialects;
 import org.junit.jupiter.api.Test;
@@ -19,13 +19,11 @@ public class NetworkntDirectProbeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetworkntDirectProbeTest.class);
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final SchemaRegistry REGISTRY = SchemaRegistry.withDefaultDialect(Dialects.getOpenApi31());
 
     private static int validate(final String schemaJson, final String input) throws Exception {
         final var schema = REGISTRY.getSchema(schemaJson);
-        final var node = MAPPER.readTree(input);
-        final var errs = schema.validate(node);
+        final var errs = schema.validate(input, InputFormat.JSON);
         errs.forEach(e -> LOG.error("  - {}", e));
         return errs.size();
     }
@@ -138,8 +136,7 @@ public class NetworkntDirectProbeTest {
                 + "}";
 
         final var s = REGISTRY.getSchema(schema);
-        final var node = MAPPER.readTree("{\"kind\":\"circle\",\"radius\":5}");
-        final var errs = s.validate(node);
+        final var errs = s.validate("{\"kind\":\"circle\",\"radius\":5}", InputFormat.JSON);
         errs.forEach(e -> LOG.error("    - {}", e));
         LOG.error("[direct/discriminator+mapping circle] errors: {}", errs.size());
     }

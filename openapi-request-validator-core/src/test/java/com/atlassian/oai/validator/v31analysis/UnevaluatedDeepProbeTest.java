@@ -1,6 +1,6 @@
 package com.atlassian.oai.validator.v31analysis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.networknt.schema.InputFormat;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.dialect.Dialects;
 import org.junit.jupiter.api.Test;
@@ -14,15 +14,13 @@ import org.slf4j.LoggerFactory;
 public class UnevaluatedDeepProbeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(UnevaluatedDeepProbeTest.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static int run(final String label,
                            final SchemaRegistry registry,
                            final String schemaJson,
                            final String input) throws Exception {
         final var schema = registry.getSchema(schemaJson);
-        final var node = MAPPER.readTree(input);
-        final var errs = schema.validate(node);
+        final var errs = schema.validate(input, InputFormat.JSON);
         LOG.error("[{}] errors: {}", label, errs.size());
         errs.forEach(e -> LOG.error("    - {}", e));
         return errs.size();

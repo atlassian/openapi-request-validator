@@ -58,7 +58,10 @@
         <hamcrest.version>3.0</hamcrest.version>
         <hamcrest-optional.version>1.3.2</hamcrest-optional.version>
         <jackson.version>2.21.3</jackson.version>
-        <networknt-validator.version>2.0.1</networknt-validator.version>
+        <!-- Jackson 3 is consumed by networknt json-schema-validator 3.x and referenced directly
+             by the custom Format validators. Keep aligned with the version networknt depends on. -->
+        <jackson3.version>3.1.1</jackson3.version>
+        <networknt-validator.version>3.0.4</networknt-validator.version>
         <jsr305.version>3.0.2</jsr305.version>
         <logback.version>1.5.32</logback.version>
         <mockito.version>5.23.0</mockito.version>
@@ -372,6 +375,13 @@
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
                 <version>${jackson.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>tools.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson3.version}</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>

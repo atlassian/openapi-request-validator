@@ -1,12 +1,14 @@
 package com.atlassian.oai.validator.schema.format;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NumericNode;
 import com.networknt.schema.ExecutionContext;
 import com.networknt.schema.SchemaContext;
 import com.networknt.schema.format.Format;
 import com.networknt.schema.utils.JsonType;
 import com.networknt.schema.utils.TypeFactory;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.NumericNode;
+
+import java.math.BigDecimal;
 
 public class FloatFormat implements Format {
     @Override
@@ -33,8 +35,15 @@ public class FloatFormat implements Format {
             return false;
         }
 
-        final float f = numericValue.floatValue();
-        final String original = String.valueOf(numericValue.decimalValue());
+        final BigDecimal dec = numericValue.decimalValue();
+        // Derive the float from the decimal: BigDecimal#floatValue() yields Infinity on overflow,
+        // whereas NumericNode#floatValue() throws in Jackson 3 when the value is out of float range.
+        final float f = dec.floatValue();
+        if (Float.isInfinite(f) || Float.isNaN(f)) {
+            return false;
+        }
+
+        final String original = String.valueOf(dec);
         final String parsed = String.valueOf(f);
 
         return original.equals(parsed);

@@ -1,11 +1,11 @@
 package com.atlassian.oai.validator.schema.format;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.ExecutionContext;
 import com.networknt.schema.SchemaContext;
 import com.networknt.schema.format.Format;
 import com.networknt.schema.utils.JsonType;
 import com.networknt.schema.utils.TypeFactory;
+import tools.jackson.databind.JsonNode;
 
 public class Int32Format implements Format {
     @Override

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.networknt.schema.Error;
+import com.networknt.schema.InputFormat;
 import com.networknt.schema.InvalidSchemaException;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.SchemaRegistryConfig;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -142,7 +144,7 @@ public class SchemaValidator {
                                 key.forResponse,
                                 definitions
                         );
-                        return schemaRegistry.getSchema(schemaObject);
+                        return schemaRegistry.getSchema(writeAsString(schemaObject), InputFormat.JSON);
                     });
         } else {
             this.jsonSchemaCache = null;
@@ -239,7 +241,8 @@ public class SchemaValidator {
 
         try {
             final com.networknt.schema.Schema resolvedJsonSchema = resolveJsonSchema(schema, keyPrefix);
-            final List<Error> validationMessages = resolvedJsonSchema.validate(supplier.get());
+            final List<Error> validationMessages =
+                    resolvedJsonSchema.validate(writeAsString(supplier.get()), InputFormat.JSON);
             return messageConverter.toValidationReport(validationMessages, keyPrefix);
         } catch (final InvalidSchemaException e) {
             return ValidationReport.singleton(
@@ -265,7 +268,7 @@ public class SchemaValidator {
                 return jsonSchemaCache.get(jsonSchemaKey);
             }
             final JsonNode schemaObject = readAndTransformSchemaObject(schema, forRequest, forResponse, definitions);
-            return schemaRegistry.getSchema(schemaObject);
+            return schemaRegistry.getSchema(writeAsString(schemaObject), InputFormat.JSON);
         } catch (final Exception e) {
             // TODO: Need to handle this exception
             throw new RuntimeException("JsonSchema construction failed", e);
@@ -292,6 +295,22 @@ public class SchemaValidator {
 
         transformers.forEach(t -> t.apply(schemaObject, transformationContext));
         return schemaObject;
+    }
+
+    /**
+     * Serialize a (Jackson 2) JSON node to a JSON string.
+     * <p>
+     * swagger-core / swagger-parser produce Jackson 2 nodes, whereas networknt 3.x consumes Jackson 3.
+     * Rather than leak Jackson 2 nodes into networknt (which removed the Jackson 2 node overloads),
+     * the schema and the instance being validated are handed to networknt as JSON text via its
+     * {@link InputFormat#JSON} entry points.
+     */
+    private String writeAsString(final JsonNode node) {
+        try {
+            return (isOpenApi30 ? Json.mapper() : Json31.mapper()).writeValueAsString(node);
+        } catch (final IOException e) {
+            throw new UncheckedIOException("Failed to serialize JSON node", e);
+        }
     }
 
     private boolean additionalPropertiesValidationEnabled() {

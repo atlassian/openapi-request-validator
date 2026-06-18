@@ -136,7 +136,7 @@ public class OpenApiLoader {
      * Removes the Base64 pattern on the {@link OpenAPI} model.
      * <p>
      * If that pattern would stay on the model all fields of type string / byte would be validated twice. Once
-     * with the {@link com.networknt.schema.PatternValidator} and once with
+     * with the {@link com.networknt.schema.keyword.PatternValidator} and once with
      * the {@link com.atlassian.oai.validator.schema.format.Base64Format}.
      * To improve validation performance and memory footprint the pattern on string / byte fields will be
      * removed - so the PatternValidator will not be triggered for those kind of fields.
