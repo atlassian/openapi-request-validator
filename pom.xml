@@ -78,7 +78,7 @@
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
         <scala-library.version>2.13.16</scala-library.version>
-        <tika.version>1.28.5</tika.version>
+        <tika.version>3.2.2</tika.version>
         <commons-codec.version>1.22.0</commons-codec.version>
 
         <!-- Plugin versions -->
