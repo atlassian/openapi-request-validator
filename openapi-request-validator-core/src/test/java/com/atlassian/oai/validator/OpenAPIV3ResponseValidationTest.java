@@ -20,6 +20,9 @@ import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadJsonResponse;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.loadXmlResponse;
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.getContextsForKey;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.CoreMatchers.is;
 
 public class OpenAPIV3ResponseValidationTest {
 
@@ -204,8 +207,15 @@ public class OpenAPIV3ResponseValidationTest {
                 .withHeader("X-Failure-Code", "1.0")
                 .build();
 
-        assertFail(classUnderTest.validateResponse("/healthcheck", GET, response),
-                "validation.response.header.schema.type");
+        final ValidationReport report = classUnderTest.validateResponse("/healthcheck", GET, response);
+
+        assertFail(report, "validation.response.header.schema.type");
+        getContextsForKey(report, "validation.response.header.schema.type").forEach(ctx -> {
+                assertThat(ctx.isPresent(), is(true));
+                assertThat(ctx.get().getHResponseHeaderName().isPresent(), is(true));
+                assertThat(ctx.get().getHResponseHeaderName().get(), is("X-Failure-Code"));
+            }
+        );
     }
 
     @Test
