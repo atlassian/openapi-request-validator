@@ -9,10 +9,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,10 +51,10 @@ public class ValidatorTestUtil {
         log.trace(JsonValidationReportFormat.getInstance().apply(report));
         assertThat("Expected validation errors but found none. Enable trace logging for more details.", report.getMessages(), is(not(empty())));
 
-        final List<String> foundKeys = report.getMessages().stream().map(ValidationReport.Message::getKey).collect(toList());
+        final List<String> foundKeys = report.getMessages().stream().map(ValidationReport.Message::getKey).toList();
 
         for (final String key : expectedKeys) {
-            assertThat(format("Expected message key '%s' but not found. Found <%s>.", key, foundKeys.toString()),
+            assertThat(format("Expected message key '%s' but not found. Found <%s>.", key, foundKeys),
                     foundKeys.contains(key), is(true));
         }
 
@@ -81,6 +81,16 @@ public class ValidatorTestUtil {
 
     public static Consumer<ValidationReport> assertPass() {
         return ValidatorTestUtil::assertPass;
+    }
+
+    /**
+     * Returns existing (Optional.isPresent) contexts for messages in {@code report} for message key = {@code key}.
+     */
+    public static List<Optional<ValidationReport.MessageContext>> getContextsForKey(final ValidationReport report, final String key) {
+        return report.getMessages().stream()
+                .filter(v -> key.equals(v.getKey()))
+                .map(ValidationReport.Message::getContext)
+                .toList();
     }
 
     /**

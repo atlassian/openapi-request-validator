@@ -184,6 +184,8 @@ public interface ValidationReport {
 
         Optional<Integer> getResponseStatus();
 
+        Optional<String> getHResponseHeaderName();
+
         Optional<ApiResponse> getApiResponseDefinition();
 
         /**
@@ -225,6 +227,7 @@ public interface ValidationReport {
             RequestBody apiRequestBodyDefinition;
 
             Integer responseStatus;
+            String  responseHeaderName;
             ApiResponse apiResponse;
 
             Location location;
@@ -244,6 +247,7 @@ public interface ValidationReport {
                 apiRequestBodyDefinition = init.getApiRequestBodyDefinition().orElse(null);
                 apiRequestContentType = init.getApiRequestContentType().orElse(null);
                 responseStatus = init.getResponseStatus().orElse(null);
+                responseHeaderName = init.getHResponseHeaderName().orElse(null);
                 apiResponse = init.getApiResponseDefinition().orElse(null);
                 location = init.getLocation().orElse(null);
                 whitelistRule = init.getAppliedWhitelistRule().orElse(null);
@@ -282,6 +286,11 @@ public interface ValidationReport {
 
             public Builder withResponseStatus(final Integer status) {
                 responseStatus = status;
+                return this;
+            }
+
+            public Builder withResponseHeaderName(final String headerName) {
+                responseHeaderName = headerName;
                 return this;
             }
 
@@ -326,6 +335,9 @@ public interface ValidationReport {
                 }
                 if (responseStatus == null) {
                     responseStatus = other.getResponseStatus().orElse(null);
+                }
+                if (responseHeaderName == null) {
+                    responseHeaderName = other.getHResponseHeaderName().orElse(null);
                 }
                 if (apiResponse == null) {
                     apiResponse = other.getApiResponseDefinition().orElse(null);

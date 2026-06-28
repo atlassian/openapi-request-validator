@@ -242,16 +242,19 @@ public class ResponseValidator {
                                             final String headerName,
                                             final Header apiHeader,
                                             final Collection<String> propertyValues) {
+        final ValidationReport.MessageContext context =
+                ValidationReport.MessageContext.create().withResponseHeaderName(headerName).build();
 
         if (propertyValues.isEmpty() && TRUE.equals(apiHeader.getRequired())) {
             return ValidationReport.singleton(
                     messages.get("validation.response.header.missing", headerName, apiOperation.getApiPath().original())
-            );
+            ).withAdditionalContext(context);
         }
 
         return propertyValues
                 .stream()
-                .map(v -> schemaValidator.validate(v, apiHeader.getSchema(), "response.header"))
+                .map(v -> schemaValidator.validate(v, apiHeader.getSchema(), "response.header")
+                        .withAdditionalContext(context))
                 .reduce(ValidationReport.empty(), ValidationReport::merge);
     }
 

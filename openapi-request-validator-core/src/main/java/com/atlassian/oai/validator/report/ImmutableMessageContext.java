@@ -22,6 +22,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     private final String apiRequestContentType;
 
     private final Integer responseStatus;
+    private final String responseHeaderName;
     private final ApiResponse apiResponseDefinition;
 
     private final Location location;
@@ -38,6 +39,7 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
         apiRequestBodyDefinition = builder.apiRequestBodyDefinition;
         apiRequestContentType = builder.apiRequestContentType;
         responseStatus = builder.responseStatus;
+        responseHeaderName = builder.responseHeaderName;
         apiResponseDefinition = builder.apiResponse;
         location = builder.location;
         whitelistRule = builder.whitelistRule;
@@ -79,6 +81,11 @@ class ImmutableMessageContext implements ValidationReport.MessageContext {
     @Override
     public Optional<Integer> getResponseStatus() {
         return Optional.ofNullable(responseStatus);
+    }
+
+    @Override
+    public Optional<String> getHResponseHeaderName() {
+        return Optional.ofNullable(responseHeaderName);
     }
 
     @JsonIgnore
