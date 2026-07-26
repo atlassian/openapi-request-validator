@@ -73,7 +73,7 @@
         <jsonassert.version>1.5.3</jsonassert.version>
 
         <!-- Overrides for transitive dependencies to address vulnerabilities -->
-        <netty.version>4.1.133.Final</netty.version>
+        <netty.version>4.1.136.Final</netty.version>
         <rhino.version>1.9.1</rhino.version>
         <xerces.version>2.12.2</xerces.version>
         <org-json.version>20180130</org-json.version>
