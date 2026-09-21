@@ -33,6 +33,9 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
 
     private final boolean strictPathMatching;
 
+    /** Compiled once per part - the path template is fixed for the lifetime of this instance. */
+    private final Pattern[] partPatterns;
+
     public ApiPathImpl(@Nonnull final String path, @Nullable final String apiPrefix) {
         this(path, apiPrefix, false);
     }
@@ -45,6 +48,10 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
                        final boolean strictPathMatching) {
         super(path, apiPrefix);
         this.strictPathMatching = strictPathMatching;
+        this.partPatterns = new Pattern[numberOfParts()];
+        for (int i = 0; i < partPatterns.length; i++) {
+            partPatterns[i] = compile(quote(part(i)).replaceAll(PARAM_REGEX, "\\\\E(.*?)\\\\Q"), CASE_INSENSITIVE);
+        }
     }
 
     @Override
@@ -66,9 +73,7 @@ public class ApiPathImpl extends NormalisedPathImpl implements ApiPath {
     @Override
     public boolean partMatches(final int index, @Nonnull final String requestPathPart) {
         requireNonNull(requestPathPart, "A request path part is required");
-        final String template = part(index);
-        final Pattern templatePattern = compile(quote(template).replaceAll(PARAM_REGEX, "\\\\E(.*?)\\\\Q"), CASE_INSENSITIVE);
-        return templatePattern.matcher(requestPathPart).matches();
+        return partPatterns[index].matcher(requestPathPart).matches();
     }
 
     @Override

@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ApiPathImplTest {
 
@@ -210,6 +211,44 @@ public class ApiPathImplTest {
     @Test
     public void matches_doesNotMatches_whenBadParamMatch() {
         assertThat(matches("/p1/p2/{param1}-{param2}", "/p1/p2/floop"), is(false));
+    }
+
+    @Test
+    public void partMatches_matchesLiterally_whenPartContainsRegexMetacharacters() {
+        assertThat(partMatches("a.b", "a.b"), is(true));
+        assertThat(partMatches("a.b", "axb"), is(false));
+        assertThat(partMatches("a+b", "a+b"), is(true));
+        assertThat(partMatches("a+b", "aab"), is(false));
+    }
+
+    @Test
+    public void partMatches_throws_whenIndexOutOfRange() {
+        final ApiPathImpl classUnderTest = new ApiPathImpl("/{id}", null);
+
+        assertThrows(IndexOutOfBoundsException.class, () -> classUnderTest.partMatches(1, "foop"));
+    }
+
+    @Test
+    public void partMatches_isRepeatable_onTheSameInstance() {
+        final ApiPathImpl classUnderTest = new ApiPathImpl("/{id}/literal/a.b/a+b", null);
+
+        assertThat(classUnderTest.partMatches(0, "foop"), is(true));
+        assertThat(classUnderTest.partMatches(1, "literal"), is(true));
+        assertThat(classUnderTest.partMatches(1, "LITERAL"), is(true));
+        assertThat(classUnderTest.partMatches(1, "blarp"), is(false));
+        assertThat(classUnderTest.partMatches(2, "a.b"), is(true));
+        assertThat(classUnderTest.partMatches(2, "axb"), is(false));
+        assertThat(classUnderTest.partMatches(3, "a+b"), is(true));
+        assertThat(classUnderTest.partMatches(3, "aab"), is(false));
+    }
+
+    @Test
+    public void matches_isRepeatable_onTheSameInstance() {
+        final ApiPathImpl classUnderTest = new ApiPathImpl("/p1/{param1}/p3", null);
+
+        assertThat(classUnderTest.matches(new NormalisedPathImpl("/p1/foop/p3", null)), is(true));
+        assertThat(classUnderTest.matches(new NormalisedPathImpl("/p1/foop/P3", null)), is(true));
+        assertThat(classUnderTest.matches(new NormalisedPathImpl("/p1/foop/blarp", null)), is(false));
     }
 
     private static void testParamValueExtraction(final String expression, final String path, final String... expected) {
