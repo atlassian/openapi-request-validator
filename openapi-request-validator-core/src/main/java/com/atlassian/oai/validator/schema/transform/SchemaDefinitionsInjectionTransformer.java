@@ -3,6 +3,8 @@ package com.atlassian.oai.validator.schema.transform;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
@@ -39,13 +41,13 @@ public class SchemaDefinitionsInjectionTransformer extends SchemaTransformer {
         if (definitions == null) {
             return;
         }
-        // In the order they are declared, so the injected block does not depend on traversal order.
         final Set<String> referenced = referencedDefinitions(schemaObject, definitions);
-        definitions.fields().forEachRemaining(definition -> {
+        // In the order they are declared, so the injected block does not depend on traversal order.
+        for (final Map.Entry<String, JsonNode> definition : definitions.properties()) {
             if (referenced.contains(definition.getKey())) {
                 injected.set(definition.getKey(), definition.getValue().deepCopy());
             }
-        });
+        }
     }
 
     /**
@@ -70,19 +72,35 @@ public class SchemaDefinitionsInjectionTransformer extends SchemaTransformer {
             } else if (node.isArray()) {
                 node.forEach(pending::push);
             } else if (node.isTextual() && node.textValue().startsWith(SCHEMA_REF_PREFIX)) {
-                reference(node.textValue().substring(SCHEMA_REF_PREFIX.length()), definitions, referenced, pending);
+                reference(definitionName(node.textValue()), definitions, referenced, pending);
             }
         }
         return referenced;
+    }
+
+    // A reference can point inside a definition, e.g. #/components/schemas/Order/properties/customer
+    private static String definitionName(final String reference) {
+        final int end = reference.indexOf('/', SCHEMA_REF_PREFIX.length());
+        return end < 0 ? reference.substring(SCHEMA_REF_PREFIX.length()) : reference.substring(SCHEMA_REF_PREFIX.length(), end);
     }
 
     private static void reference(final String name,
                                   final JsonNode definitions,
                                   final Set<String> referenced,
                                   final Deque<JsonNode> pending) {
-        final JsonNode definition = definitions.get(name);
-        if (definition != null && referenced.add(name)) {
+        final String key = definitions.has(name) ? name : decoded(name);
+        final JsonNode definition = definitions.get(key);
+        if (definition != null && referenced.add(key)) {
             pending.push(definition);
+        }
+    }
+
+    // A reference is a URI fragment holding a JSON Pointer, so it can percent-encode the name and escape '~' and '/' in it.
+    private static String decoded(final String name) {
+        try {
+            return URLDecoder.decode(name.replace("+", "%2B"), StandardCharsets.UTF_8).replace("~1", "/").replace("~0", "~");
+        } catch (final IllegalArgumentException e) {
+            return name;
         }
     }
 }

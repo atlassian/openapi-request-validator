@@ -24,6 +24,8 @@ public class SchemaDefinitionsInjectionTransformerTest {
             + "\"items\":{\"$ref\":\"#/components/schemas/Folder\"}}}},"
             + "\"Cat\":{\"type\":\"object\"},"
             + "\"Dog\":{\"type\":\"object\"},"
+            + "\"Line Item\":{\"type\":\"object\"},"
+            + "\"Tax/Rate\":{\"type\":\"object\"},"
             + "\"Unrelated\":{\"type\":\"object\"}"
             + "}";
 
@@ -54,6 +56,26 @@ public class SchemaDefinitionsInjectionTransformerTest {
         classUnderTest.apply(schema, context());
 
         assertEquals(List.of("Folder"), injected(schema));
+    }
+
+    @Test
+    public void injectsDefinition_whenReferenceGoesIntoIt() throws Exception {
+        final ObjectNode schema = schema("{\"$ref\":\"#/components/schemas/Order/properties/customer\"}");
+
+        classUnderTest.apply(schema, context());
+
+        assertEquals(List.of("Order", "Customer", "Address"), injected(schema));
+    }
+
+    @Test
+    public void injectsDefinition_whenReferenceEncodesItsName() throws Exception {
+        final ObjectNode schema = schema("{\"type\":\"object\",\"properties\":{"
+                + "\"item\":{\"$ref\":\"#/components/schemas/Line%20Item\"},"
+                + "\"rate\":{\"$ref\":\"#/components/schemas/Tax~1Rate\"}}}");
+
+        classUnderTest.apply(schema, context());
+
+        assertEquals(List.of("Line Item", "Tax/Rate"), injected(schema));
     }
 
     @Test
