@@ -4,6 +4,7 @@ import com.atlassian.oai.validator.report.MessageResolver;
 import com.atlassian.oai.validator.report.ValidationReport;
 import com.atlassian.oai.validator.schema.SchemaValidator;
 import io.swagger.v3.oas.models.media.ArraySchema;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 
@@ -76,7 +77,7 @@ class ParameterValidator {
             }
         }
 
-        if (parameter.getSchema() instanceof ArraySchema) {
+        if (isArraySchema(parameter.getSchema())) {
             return validateArrayParam(value, parameter).withAdditionalContext(context);
         }
 
@@ -109,7 +110,7 @@ class ParameterValidator {
             return ValidationReport.empty();
         }
 
-        if (!(parameter.getSchema() instanceof ArraySchema)) {
+        if (!isArraySchema(parameter.getSchema())) {
             if (values.size() > 1) {
                 return ValidationReport.singleton(
                         messages.get("validation.request.parameter.collection.invalid", parameter.getName())
@@ -152,7 +153,7 @@ class ParameterValidator {
 
         return values.stream()
                 .map(v -> schemaValidator.validate(
-                        v, ((ArraySchema) parameter.getSchema()).getItems(), "request.parameter")
+                        v, parameter.getSchema().getItems(), "request.parameter")
                 )
                 .reduce(report, ValidationReport::merge);
     }
@@ -185,6 +186,32 @@ class ParameterValidator {
         return ValidationReport.empty();
     }
 
+    /**
+     * Determine whether the given schema describes an array.
+     * <p>
+     * OpenAPI 3.0 array schemas are parsed as {@link ArraySchema}. OpenAPI 3.1 schemas are parsed as generic schemas
+     * where the type is held in {@link Schema#getTypes()} (e.g. {@code [array]} or {@code [array, null]}), and
+     * {@link Schema#getType()} may not be populated.
+     *
+     * @param schema The schema to inspect (may be {@code null}, e.g. for parameters defined with {@code content})
+     *
+     * @return {@code true} if the schema describes an array
+     */
+    private static boolean isArraySchema(@Nullable final Schema<?> schema) {
+        if (schema == null) {
+            return false;
+        }
+        if (schema instanceof ArraySchema || "array".equals(schema.getType())) {
+            return true;
+        }
+        final Set<?> types = schema.getTypes();
+        if (types == null || !types.contains("array")) {
+            return false;
+        }
+        // Only treat as an array if "array" is the sole non-null type; other unions (e.g. [array, string]) are ambiguous
+        return types.stream().allMatch(t -> "array".equals(t) || "null".equals(t));
+    }
+
     @SuppressWarnings("checkstyle:UnnecessaryParentheses")
     private boolean emptyAllowed(final Parameter parameter) {
         // See https://swagger.io/specification/#parameter-object
@@ -193,7 +220,7 @@ class ParameterValidator {
                 // It's unclear from the spec whether this should be restricted to String schemas,
                 // but it doesn't make sense not to IMHO
                 && parameter.getSchema() instanceof StringSchema)
-                || parameter.getSchema() instanceof ArraySchema;
+                || isArraySchema(parameter.getSchema());
     }
 
 }
