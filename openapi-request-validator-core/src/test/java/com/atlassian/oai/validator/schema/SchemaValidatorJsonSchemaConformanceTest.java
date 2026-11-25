@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.junit.jupiter.api.Test;
 
+import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertFail;
 import static com.atlassian.oai.validator.util.ValidatorTestUtil.assertPass;
 
 /**
@@ -54,6 +55,35 @@ public class SchemaValidatorJsonSchemaConformanceTest {
         "{\"id\": \"urn:uuid:deadbeef-1234-ffff-ffff-4321feebdaed\", "
             + "\"minimum\": 30, "
             + "\"properties\": {\"foo\": {\"$ref\": \"urn:uuid:deadbeef-1234-ffff-ffff-4321feebdaed\"}}}";
+
+    // JSON-Schema-Test-Suite draft2020-12/const.json, group 3, tests 0 and 1:
+    // a schema of {"const": null} accepts only the null value.
+    private static final String CONST_2020_12 =
+        "{\"$schema\": \"https://json-schema.org/draft/2020-12/schema\", \"const\": null}";
+
+    // JSON-Schema-Test-Suite draft7/const.json, group 3, tests 0 and 1:
+    // the same case without a $schema declaration.
+    private static final String CONST_DRAFT7 = "{\"const\": null}";
+
+    @Test
+    public void validate_constNull202012_shouldPassForNull() {
+        assertPass(validate(CONST_2020_12, "null"));
+    }
+
+    @Test
+    public void validate_constNull202012_shouldFailForNonNull() {
+        assertFail(validate(CONST_2020_12, "0"));
+    }
+
+    @Test
+    public void validate_constNullDraft7_shouldPassForNull() {
+        assertPass(validate(CONST_DRAFT7, "null"));
+    }
+
+    @Test
+    public void validate_constNullDraft7_shouldFailForNonNull() {
+        assertFail(validate(CONST_DRAFT7, "0"));
+    }
 
     @Test
     public void validate_anchorRefAgainstBaseUri_shouldPass() {
