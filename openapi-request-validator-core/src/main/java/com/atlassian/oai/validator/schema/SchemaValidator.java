@@ -9,6 +9,7 @@ import com.atlassian.oai.validator.schema.format.Int32Format;
 import com.atlassian.oai.validator.schema.format.Int64Format;
 import com.atlassian.oai.validator.schema.transform.AdditionalPropertiesInjectionTransformer;
 import com.atlassian.oai.validator.schema.transform.DiscriminatorMappingTransformer;
+import com.atlassian.oai.validator.schema.transform.Draft4IdentifierTransformer;
 import com.atlassian.oai.validator.schema.transform.ReferenceResolutionTransformer;
 import com.atlassian.oai.validator.schema.transform.RequiredFieldTransformer;
 import com.atlassian.oai.validator.schema.transform.SchemaDefinitionsInjectionTransformer;
@@ -131,7 +132,8 @@ public class SchemaValidator {
             DiscriminatorMappingTransformer.getInstance(),
             AdditionalPropertiesInjectionTransformer.getInstance(),
             RequiredFieldTransformer.getInstance(),
-            ReferenceResolutionTransformer.getInstance());
+            ReferenceResolutionTransformer.getInstance(),
+            Draft4IdentifierTransformer.getInstance());
         this.transformers = transformers;
 
         if (validationConfiguration.isCacheEnabled()) {

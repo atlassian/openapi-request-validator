@@ -41,9 +41,33 @@ public class SchemaValidatorJsonSchemaConformanceTest {
             + "\"items\": {\"$dynamicRef\": \"#/$defs/items\"}, "
             + "\"$defs\": {\"items\": {\"$comment\": \"bookending\", \"$dynamicAnchor\": \"items\", \"type\": \"number\"}}}}}";
 
+    // JSON-Schema-Test-Suite draft4/anchor-legacy.json, group 7, test 0:
+    // a draft-4 schema whose "id" is a URN; the $ref uses that URN with a plain-name fragment.
+    private static final String ANCHOR_LEGACY =
+        "{\"id\": \"urn:uuid:deadbeef-1234-ff00-00ff-4321feebdaed\", "
+            + "\"properties\": {\"foo\": {\"$ref\": \"urn:uuid:deadbeef-1234-ff00-00ff-4321feebdaed#something\"}}, "
+            + "\"definitions\": {\"bar\": {\"id\": \"#something\", \"type\": \"string\"}}}";
+
+    // JSON-Schema-Test-Suite draft4/id-legacy.json, group 13, test 0:
+    // a draft-4 schema whose "id" is a URN; the $ref uses that URN to reference the root schema.
+    private static final String ID_LEGACY =
+        "{\"id\": \"urn:uuid:deadbeef-1234-ffff-ffff-4321feebdaed\", "
+            + "\"minimum\": 30, "
+            + "\"properties\": {\"foo\": {\"$ref\": \"urn:uuid:deadbeef-1234-ffff-ffff-4321feebdaed\"}}}";
+
     @Test
     public void validate_anchorRefAgainstBaseUri_shouldPass() {
         assertPass(validate(ANCHOR_2020_12, "\"a\""));
+    }
+
+    @Test
+    public void validate_legacyAnchorWithUrnId_shouldPass() {
+        assertPass(validate(ANCHOR_LEGACY, "{\"foo\": \"bar\"}"));
+    }
+
+    @Test
+    public void validate_legacyIdWithUrnRef_shouldPass() {
+        assertPass(validate(ID_LEGACY, "{\"foo\": 37}"));
     }
 
     @Test
